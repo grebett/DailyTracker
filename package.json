@@ -5,6 +5,7 @@
   "main": "server.js",
   "dependencies": {
     "chalk": "^1.0.0",
+    "cors": "^2.5.3",
     "express": "^4.12.2",
     "q": "^1.2.0"
   },

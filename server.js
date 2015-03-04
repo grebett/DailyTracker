@@ -1,8 +1,9 @@
 var https = require('https');
 var fs = require('fs');
 var express = require('express');
-var daily = require('./dailymotion-api.service.js');
 var chalk = require('chalk');
+var cors = require('cors');
+var daily = require('./dailymotion-api.service.js');
 var config = require('./config.js');
 
 // https request on dailymotion API, appending audience each `callInterval` ms to `audience.log` file
@@ -28,6 +29,8 @@ daily(config.videoId, ['onair'], false).then(function (video) {
 
 // express basic webserver
 var app = express();
+
+app.use(cors());
 
 app.get('/', function (req, res) {
   res.send('hello world!');
