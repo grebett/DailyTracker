@@ -7,7 +7,8 @@ var q = require('q');
 module.exports = function (videoId, fields, verbose) {
   var options = {
     host: 'api.dailymotion.com',
-    path: '/video/' + videoId + '?fields=' + fields.join(',')
+    path: '/video/' + videoId + '?fields=' + fields.join(','),
+    headers: {'Cache-Control':'no-cache'}
   };
   var deferred = q.defer();
 
