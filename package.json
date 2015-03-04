@@ -1,0 +1,33 @@
+{
+  "name": "DailyTracker",
+  "version": "1.0.0",
+  "description": "realtime audience tracker for dailymotion platform",
+  "main": "server.js",
+  "dependencies": {
+    "chalk": "^1.0.0",
+    "express": "^4.12.2",
+    "q": "^1.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo 'no test available for this program'",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/grebett/DailyTracker.git"
+  },
+  "keywords": [
+    "tracker",
+    "audience",
+    "stream",
+    "live",
+    "dailymotion"
+  ],
+  "author": "grebett (for JKTV)",
+  "license": "All rights reserved.",
+  "bugs": {
+    "url": "https://github.com/grebett/DailyTracker/issues"
+  },
+  "homepage": "https://github.com/grebett/DailyTracker"
+}
