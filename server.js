@@ -42,10 +42,12 @@ app.post('/start', function (req, res) {
       console.log(chalk.green('▃▃▃ log ▃▃▃'), video);
 
       // aargh, closure !
-      (function (videoId) {
+      var data = "";
+      (function (videoId, data) {
         var interval = setInterval(function () {
+          global.gc();
           daily(videoId, ['audience'], false).then(function (video) {
-            var data = new Date().getTime() + ':' + video.audience;
+            data = new Date().getTime() + ':' + video.audience;
             console.log(chalk.green('▃▃▃ log ▃▃▃ ' + videoId + ':'), video);
             fs.appendFile('audience.' + videoId + '.log', data + '\n', function (err) {
               if (err) {
@@ -56,7 +58,7 @@ app.post('/start', function (req, res) {
         }, config.callInterval);
         // adding video + interval to videos array
         videos.push({id: videoId, interval: interval});
-      })(videoId);
+      })(videoId, data);
     }
   });
 
