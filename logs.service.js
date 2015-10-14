@@ -13,11 +13,6 @@ exports.start = function (videoId, platform) {
     douyutv: require('./douyutv.call.js')
   };
 
-  if (!services[platform]) {
-    deferred.reject('The requested platform does not exist or is not supported yet.');
-    return deferred.promise;
-  }
-
   // first we create the adequat logs document
   Logs.create({
     videoId: videoId,
@@ -32,17 +27,28 @@ exports.start = function (videoId, platform) {
         var audience, body = JSON.parse(body);
 
         // of course, all response are not formatted the same for every platforms
+        // so the audience field should target differents paths
+        // if there is some undefined fields (i.e. live stream may be off), just ignore this call
+        // and return, waiting for the next one (who knows, the stream may go on sooner or later?)
         switch (platform) {
           case 'douyutv':
+            if (!body.data)
+              return;
             audience = body.data.online;
             break;
           case 'twitch':
+            if (!body.stream)
+              return;
             audience = body.stream.viewers;
             break;
           case 'youtubeGaming':
+            if (!body.items[0] || (body.items[0] && !body.items[0].liveStreamingDetails))
+              return;
             audience = body.items[0].liveStreamingDetails.concurrentViewers;
             break;
           case 'dailymotion':
+            if (body.audience === 0)
+              return;
             audience = body.audience;
             break;
         }
@@ -53,7 +59,7 @@ exports.start = function (videoId, platform) {
         Logs.update(logs._id, {$push: {data: {timestamp: timestamp, value: audience}}})
           .then(function (success) {
             // just log the values for now in the app logs output
-            console.log('success', 'new log> ' + timestamp + ' = ' + audience);
+            console.log('[' + platform, '] ' + timestamp + ': ' + audience);
           }, function (error) {
             // or the errors...
             console.log('error', error);
@@ -63,9 +69,12 @@ exports.start = function (videoId, platform) {
 
     // pushing the new interval in the intervals glob
     process.intervals.push({
+      logsId: logs._id,
       videoId: videoId,
       interval: interval
     });
+
+    console.log(process.intervals); // temp
 
     // then resolve the promise with the new logs
     deferred.resolve(logs);

@@ -27,6 +27,12 @@ app.use(cors());
 app.post('/api/start', function (req, res) {
   var videoId = req.body.videoId;
   var platform = req.body.platform;
+  var services = {
+    youtubeGaming: require('./youtube-gaming.call.js'),
+    dailymotion: require('./dailymotion.call.js'),
+    twitch: require('./twitch.call.js'),
+    douyutv: require('./douyutv.call.js')
+  };
 
   // error checking
   if (!platform || !videoId)
@@ -38,27 +44,57 @@ app.post('/api/start', function (req, res) {
       return res.status(403).json('There is already a video monitoring for ' + videoId + '. Please stop it before launching another monitoring process.')
   }
 
-  // let's start the intervals
-  startLogs(videoId, platform)
-    .then(function (result) {
-      res.json(result);
-    }, function (error) {
-      res.json(error);
+  // before starting, try a first call to check if the provided id is correct and existing
+  if (!services[platform])
+    return res.status(404).json('The requested platform does not exist or is not supported yet.');
+  else {
+    services[platform](videoId, function (error, response, body) {
+      body = JSON.parse(body);
+      if (error)
+        return res.json(error);
+
+      // body items for youtube, error for the 3 other video providers
+      if (body.error || (body.items && body.items.length === 0))
+        return res.status(401).json('The provided id does not match any videos for the platform mentionned.');
+      else {
+        // let's start the intervals
+        startLogs(videoId, platform)
+          .then(function (result) {
+            res.json(result);
+          }, function (error) {
+            res.json(error);
+          });
+      }
     });
+  }
 });
 
-app.post('/api/stop', function (req, res) { //NTS: later add a stoppedAt value in the logs document (need the docs id, not only the video_id)
+app.post('/api/stop', function (req, res) {
   var videoId = req.body.videoId;
 
   // error checking
   if (!videoId)
     return res.status(401).json('You should provide the videoId value.');
 
-  // serach for the interval stop it and delete it from the intervals glob
+  // search for the interval stop it and delete it from the intervals glob
   for (var i = 0; i < process.intervals.length; i++) {
     if (process.intervals[i].videoId === videoId) {
+      // stop the interval
       clearInterval(process.intervals[i].interval);
+
+      // set the stoppedAt date in the logs doc
+      Logs.update(process.intervals[i].logsId, {$set: {stoppedAt: new Date()}})
+        .then(function (success) {
+          // just log the values for now in the app logs output
+          console.log('success', 'logs doc updated.');
+        }, function (error) {
+          // or the errors...
+          console.log('error', error);
+        });
+
+      // lastly, remove the interval from the glob
       process.intervals.splice(i, 1);
+
       return res.status(200).json('The video monitoring for ' + videoId + ' has been stopped.');
     }
   }
@@ -91,6 +127,9 @@ app.get('/api/logs/:_id', function (req, res) {
     });
 });
 
+app.get('/api/intervals', function (req, res) {
+  res.json(process.intervals);
+});
 
 ////////////////////
 // launching server

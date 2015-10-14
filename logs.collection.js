@@ -6,7 +6,7 @@ var Logs = mongoose.model('Logs', new mongoose.Schema({ // NTS: some inconstancy
   videoId: String,
   platform: String,
   startedAt: Date,
-  finishedAt: Date,
+  stoppedAt: Date,
   data: [{
     timestamp: String,
     value: Number
@@ -69,9 +69,9 @@ exports.create = function (data) {
 };
 
 
-exports.update = function (query, data, lean, select) {
+exports.update = function (_id, data, lean, select) {
   var deferred = q.defer();
-  var req = Logs.findOneAndUpdate({_id: query}, data, {new: true});
+  var req = Logs.findOneAndUpdate({_id: _id}, data, {new: true});
 
   // select only returns the selecting fields
   if (select)

@@ -1,6 +1,6 @@
 var config = {
   port: 3000,
-  callInterval: 5000,
+  callInterval: 60000,
   mongo: {
     uri: 'mongodb://localhost/jk_monitoring',
     options: {
